@@ -96,22 +96,26 @@ var operators_1 = __webpack_require__(103);
 var searchInput = document.querySelector('.search-input');
 var repoEl = document.querySelector('.list-group');
 var getRepo = 'https://api.github.com/search/repositories';
-var sequence1$ = rxjs_1.fromEvent(searchInput, 'input');
-var sequence2$ = sequence1$
-    .pipe(operators_1.debounceTime(500), operators_1.distinctUntilChanged(), operators_1.tap(function (_) { return clearResults(); }), operators_1.switchMap(function (event) { return request(event); }));
-sequence2$.subscribe(function (result) { return showResult(result); });
-function clearResults() {
+var clearResults = function () {
     if (repoEl) {
         repoEl.innerHTML = "";
     }
-}
+};
+var sequence1$ = rxjs_1.fromEvent(searchInput, 'input');
+var sequence2$ = sequence1$
+    .pipe(operators_1.debounceTime(500), operators_1.distinctUntilChanged(), operators_1.tap(clearResults), operators_1.switchMap(function (event) { return request(event)
+    .pipe(operators_1.catchError(function (error) { return rxjs_1.of("Error: " + error); })); }));
+sequence2$.subscribe(function (result) { return showResult(result); });
 function request(event) {
     var url = getRepo + "?q=" + event.target.value;
     return rxjs_1.from(fetch(url).then(function (res) { return res.json(); }));
 }
 ;
 function showResult(response) {
-    if (!response.items) {
+    if (!response.items || !response.items.length) {
+        var error = document.createElement('span');
+        error.innerText = 'No results found';
+        repoEl.appendChild(error);
         return;
     }
     for (var i = 0; i < response.items.length; i++) {
@@ -11778,4 +11782,4 @@ function zipAll(project) {
 
 /***/ })
 /******/ ]);
-//# sourceMappingURL=main.fa99ca889fcfdfa9f053.js.map
+//# sourceMappingURL=main.98141042ad26ad2c344a.js.map
